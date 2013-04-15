@@ -30,12 +30,12 @@ for driver in drivers:
     device_list_item = device_list
     devices = []
     while device_list_item:
-        devices.append(gpointer_to_sr_dev_inst_ptr(device_list_item.data))
+        pointer = device_list_item.data
+        device = gpointer_to_sr_dev_inst_ptr(pointer)
+        print device.vendor, device.model, device.version
+        devices.append(device)
         device_list_item = device_list_item.next
     g_slist_free(device_list)
-    if len(devices) > 0:
-        for device in devices:
-            print device.vendor, device.model, device.version
 
 check(sr_exit(context), "shutting down libsigrok")
 
