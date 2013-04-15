@@ -1,5 +1,6 @@
 %module(package="sigrok") libsigrok
 %include "cpointer.i"
+%include "carrays.i"
 
 %{
 #include "libsigrok/libsigrok.h"
@@ -15,4 +16,5 @@
 %include "libsigrok/proto.h"
 %include "libsigrok/version.h"
 
-%pointer_functions(struct sr_context *, sr_context_pointer);
+%pointer_functions(struct sr_context *, sr_context_ptr_ptr);
+%array_functions(struct sr_dev_driver *, sr_dev_driver_ptr_array);
