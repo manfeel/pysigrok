@@ -2,13 +2,15 @@ from sigrok import *
 import itertools
 import sys
 
-sr_ctx = new_sr_context_ptr_ptr()
+def check(ret, operation):
+    if ret != SR_OK:
+        print "Error %s (%s): %s." % (
+            operation, sr_strerror_name(ret), sr_strerror(ret))
+        sys.exit(1)
 
-ret = sr_init(sr_ctx)
-if ret != SR_OK:
-    print "Error initializing libsigrok (%s): %s." % (
-        sr_strerror_name(ret), sr_strerror(ret))
-    sys.exit(1)
+context_ptr = new_sr_context_ptr_ptr()
+check(sr_init(context_ptr), "initializing libsigrok")
+context = sr_context_ptr_ptr_value(context_ptr)
 
 driver_list = sr_driver_list()
 drivers = []
@@ -21,10 +23,20 @@ for i in itertools.count():
 
 print "Drivers:", str.join(", ", [driver.name for driver in drivers])
 
-ret = sr_exit(sr_context_ptr_ptr_value(sr_ctx))
-if ret != SR_OK:
-    print "Error shutting down libsigrok (%s): %s." % (
-        sr_strerror_name(ret), sr_strerror(ret))
-    sys.exit(1)
+print "Devices:"
+for driver in drivers:
+    check(sr_driver_init(context, driver), "initialising %s" % driver.name)
+    device_list = sr_driver_scan(driver, None)
+    device_list_item = device_list
+    devices = []
+    while device_list_item:
+        devices.append(gpointer_to_sr_dev_inst_ptr(device_list_item.data))
+        device_list_item = device_list_item.next
+    g_slist_free(device_list)
+    if len(devices) > 0:
+        for device in devices:
+            print device.vendor, device.model, device.version
+
+check(sr_exit(context), "shutting down libsigrok")
 
 sys.exit(0)
